@@ -31,13 +31,34 @@ tunnel.on('close', code => {
 });
 
 app.get('/', (req, res) => {
-  let body ='<h3>Link, where listener is running:</h3>'+ hookUrl + '<h2>List of Previous Requests:</h2><ul>';
+  let body = `<h3>Link, where listener is running:</h3> ${hookUrl} 
+<button onclick="copyHookUrl()" style="marging: 5px">Copy</button>
+<h2>List of Previous Requests:</h2><ul>`;
   requests.forEach((request, index) => {
     body += `<li>Request ${index + 1}: ${JSON.stringify(request)}</li>`;
   });
   body += '</ul>';
+
+  // Add a meta refresh tag to reload the page every 5 seconds
+  body += '<meta http-equiv="refresh" content="5">';
+
+  // Add a script to copy the hookUrl data to clipboard
+  body += `
+    <script>
+      function copyHookUrl() {
+        const el = document.createElement('textarea');
+        el.value = '${hookUrl}';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+    </script>
+  `;
+
   res.send(body);
 });
+
 
 app.post('/', (req, res) => {
   console.log("New Request: ", req.body)
