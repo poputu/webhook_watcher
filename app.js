@@ -40,6 +40,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
+  console.log("New Request: ", req.body)
   requests.push(req.body);
   res.send('Request received');
 });
