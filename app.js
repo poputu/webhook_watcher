@@ -38,6 +38,7 @@ tunnel.on("close", (code) => {
 app.get("/", (req, res) => {
   let body = `<h3>Link, where listener is running:</h3> ${hookUrl} 
 <button onclick="copyHookUrl()" style="margin: 5px">Copy</button>
+<button onclick="clearRequests()" style="margin: 5px">Clear Requests</button>
 <h2>List of Previous Requests:</h2><ul>`;
   requests.forEach((request, index) => {
     body += `<li>Request ${index + 1}: ${JSON.stringify(request)}</li>`;
@@ -47,7 +48,7 @@ app.get("/", (req, res) => {
   // Add a meta refresh tag to reload the page every 5 seconds
   body += '<meta http-equiv="refresh" content="5">';
 
-  // Add a script to copy the hookUrl data to clipboard
+  // Add a script to copy the hookUrl data to clipboard and clear requests
   body += `
     <script>
       function copyHookUrl() {
@@ -57,6 +58,11 @@ app.get("/", (req, res) => {
         el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
+      }
+
+      function clearRequests() {
+        fetch('/clear-requests', { method: 'POST' })
+          .then(() => location.reload());
       }
     </script>
   `;
@@ -72,16 +78,16 @@ app.post("/", (req, res) => {
   if (REDIRECT_PORT) {
     const http = require("http");
     const request = http.request(
-      {
-        hostname: "localhost",
-        port: REDIRECT_PORT,
-        path: "/",
-        method: "POST",
-        headers: req.headers,
-      },
-      (response) => {
-        console.log("Response from redirect server:", response.statusCode);
-      }
+        {
+          hostname: "localhost",
+          port: REDIRECT_PORT,
+          path: "/",
+          method: "POST",
+          headers: req.headers,
+        },
+        (response) => {
+          console.log("Response from redirect server:", response.statusCode);
+        }
     );
 
     request.write(JSON.stringify(req.body));
@@ -89,6 +95,11 @@ app.post("/", (req, res) => {
   }
 
   res.send("Request received");
+});
+
+app.post("/clear-requests", (req, res) => {
+  requests.length = 0; // Clear the requests array
+  res.send("Requests cleared");
 });
 
 app.listen(port, () => {
