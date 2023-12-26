@@ -1,9 +1,13 @@
 const express = require("express");
+const multer = require("multer"); // Import multer for file uploads
 const app = express();
 const bodyParser = require("body-parser");
 const { spawn } = require("child_process");
 const REDIRECT_PORT = process.env.REDIRECT_PORT;
 const port = 3099;
+
+// Configure multer to handle file uploads
+const upload = multer({ dest: "uploads/" }); // Specify the upload directory
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -70,9 +74,18 @@ app.get("/", (req, res) => {
   res.send(body);
 });
 
-app.post("/", (req, res) => {
-  console.log("New Request: ", req.body);
-  requests.push(req.body);
+  app.post("/", upload.single("file"), (req, res) => {
+    // Access the uploaded file
+    console.log("New Request: ", req.body);
+    requests.push(req.body);
+    const file = req.file;
+
+    if (file) {
+      console.log("File uploaded:", file.originalname, file.path);
+      // Add the file path to the request data
+      req.body.file = file.path;
+    }
+
 
   // Send the request to the other application
   if (REDIRECT_PORT) {
